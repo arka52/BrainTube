@@ -1,81 +1,84 @@
-import { useState } from 'react'
-import axios from 'axios'
-import './App.css'
-import { MCQResponse, MCQuestion } from './types'
+import { useState } from "react";
+import axios from "axios";
+import "./App.css";
+import { MCQResponse, MCQuestion } from "./types";
 
 function App() {
-  const [videoUrl, setVideoUrl] = useState('')
-  const [questions, setQuestions] = useState<MCQuestion[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([])
-  const [submitted, setSubmitted] = useState(false)
-  const [score, setScore] = useState(0)
+  const [videoUrl, setVideoUrl] = useState("");
+  const [questions, setQuestions] = useState<MCQuestion[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
+  const [submitted, setSubmitted] = useState(false);
+  const [score, setScore] = useState(0);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!videoUrl.trim()) {
-      setError('Please enter a YouTube video URL')
-      return
+      setError("Please enter a YouTube video URL");
+      return;
     }
-    
-    setLoading(true)
-    setError('')
-    setQuestions([])
-    setSelectedAnswers([])
-    setSubmitted(false)
-    setScore(0)
+
+    setLoading(true);
+    setError("");
+    setQuestions([]);
+    setSelectedAnswers([]);
+    setSubmitted(false);
+    setScore(0);
 
     try {
-      const response = await axios.post<MCQResponse>('http://localhost:5000/api/generate-mcq', {
-        videoUrl
-      })
-      
-      const randomizedQuestions = response.data.questions.map(q => {
-        const correctAnswer = q.options[q.correctIndex]
-        const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5)
-        const newCorrectIndex = shuffledOptions.indexOf(correctAnswer)
-        
+      const response = await axios.post<MCQResponse>(
+        "https://quiztube-backend.onrender.com/api/generate-mcq",
+        {
+          videoUrl,
+        }
+      );
+
+      const randomizedQuestions = response.data.questions.map((q) => {
+        const correctAnswer = q.options[q.correctIndex];
+        const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+        const newCorrectIndex = shuffledOptions.indexOf(correctAnswer);
+
         return {
           ...q,
           options: shuffledOptions,
-          correctIndex: newCorrectIndex
-        }
-      })
-      
-      setQuestions(randomizedQuestions)
-      setSelectedAnswers(new Array(randomizedQuestions.length).fill(-1))
+          correctIndex: newCorrectIndex,
+        };
+      });
+
+      setQuestions(randomizedQuestions);
+      setSelectedAnswers(new Array(randomizedQuestions.length).fill(-1));
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.data?.error) {
-        setError(err.response.data.error)
+        setError(err.response.data.error);
       } else {
-        setError('Failed to generate questions. Please try again.')
+        setError("Failed to generate questions. Please try again.");
       }
-      console.error(err)
+      console.error(err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleAnswerSelect = (questionIndex: number, optionIndex: number) => {
     if (submitted) return;
-    const newAnswers = [...selectedAnswers]
-    newAnswers[questionIndex] = optionIndex
-    setSelectedAnswers(newAnswers)
-  }
+    const newAnswers = [...selectedAnswers];
+    newAnswers[questionIndex] = optionIndex;
+    setSelectedAnswers(newAnswers);
+  };
 
   const handleSubmitAnswers = () => {
     if (selectedAnswers.includes(-1)) {
-      setError('Please answer all questions before submitting')
-      return
+      setError("Please answer all questions before submitting");
+      return;
     }
-    setError('')
+    setError("");
     const correctAnswers = selectedAnswers.reduce((count, answer, index) => {
-      return count + (answer === questions[index].correctIndex ? 1 : 0)
-    }, 0)
-    setScore(correctAnswers)
-    setSubmitted(true)
-  }
+      return count + (answer === questions[index].correctIndex ? 1 : 0);
+    }, 0);
+    setScore(correctAnswers);
+    setSubmitted(true);
+  };
 
   return (
     <div className="container">
@@ -89,7 +92,7 @@ function App() {
           className="video-input"
         />
         <button type="submit" disabled={loading}>
-          {loading ? 'Generating...' : 'Generate MCQs'}
+          {loading ? "Generating..." : "Generate MCQs"}
         </button>
       </form>
 
@@ -99,14 +102,14 @@ function App() {
         <div className="questions-container">
           <h2>Multiple Choice Questions</h2>
           {questions.map((q, qIndex) => (
-            <div 
-              key={qIndex} 
+            <div
+              key={qIndex}
               className={`question-card ${
-                submitted 
-                  ? selectedAnswers[qIndex] === q.correctIndex 
-                    ? 'correct-answer' 
-                    : 'wrong-answer'
-                  : ''
+                submitted
+                  ? selectedAnswers[qIndex] === q.correctIndex
+                    ? "correct-answer"
+                    : "wrong-answer"
+                  : ""
               }`}
             >
               <h3>Question {qIndex + 1}</h3>
@@ -126,17 +129,27 @@ function App() {
                 ))}
               </div>
               {submitted && (
-                <p style={{ color: selectedAnswers[qIndex] === q.correctIndex ? '#22c55e' : '#ff4444', marginTop: '1rem' }}>
-                  {selectedAnswers[qIndex] === q.correctIndex 
-                    ? '✓ Correct!' 
-                    : `✗ Incorrect. The correct answer is: ${q.options[q.correctIndex]}`}
+                <p
+                  style={{
+                    color:
+                      selectedAnswers[qIndex] === q.correctIndex
+                        ? "#22c55e"
+                        : "#ff4444",
+                    marginTop: "1rem",
+                  }}
+                >
+                  {selectedAnswers[qIndex] === q.correctIndex
+                    ? "✓ Correct!"
+                    : `✗ Incorrect. The correct answer is: ${
+                        q.options[q.correctIndex]
+                      }`}
                 </p>
               )}
             </div>
           ))}
-          
+
           {!submitted && questions.length > 0 && (
-            <button 
+            <button
               className="submit-answers"
               onClick={handleSubmitAnswers}
               disabled={selectedAnswers.includes(-1)}
@@ -150,18 +163,18 @@ function App() {
               <h2>Your Score</h2>
               <p className="score">{score} out of 10</p>
               <p>
-                {score === 10 
-                  ? 'Perfect score! Excellent work! 🎉' 
-                  : score >= 7 
-                    ? 'Great job! Keep it up! 👏' 
-                    : 'Good try! Review the correct answers above to learn more. 📚'}
+                {score === 10
+                  ? "Perfect score! Excellent work! 🎉"
+                  : score >= 7
+                  ? "Great job! Keep it up! 👏"
+                  : "Good try! Review the correct answers above to learn more. 📚"}
               </p>
             </div>
           )}
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
