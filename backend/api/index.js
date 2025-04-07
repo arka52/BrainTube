@@ -114,27 +114,28 @@ app.post('/api/generate-mcq', async (req, res) => {
 
     console.log('Extracted Video ID:', videoId);
 
-    // try {
-    //   const subtitleText = await getSubtitlesFromVideo(videoId);
+    try {
+      const subtitleText = await Subtitlemain(videoId);
       
-    //   if (!subtitleText) {
-    //     return res.status(404).json({ 
-    //       error: 'No English captions found. Please ensure the video has either manual or auto-generated English captions enabled.'
-    //     });
-    //   }
+      if (!subtitleText) {
+        return res.status(404).json({ 
+          error: 'No English captions found. Please ensure the video has either manual or auto-generated English captions enabled.'
+        });
+      }
 
-    //   const mcqs = await generateMCQs(subtitleText);
-    //   res.json(mcqs);
-    // } catch (subtitleError) {
-    //   console.error('Subtitle extraction error:', subtitleError);
-    //   res.status(404).json({ 
-    //     error: 'Failed to extract captions. Please ensure the video exists and has English subtitles enabled (either manual or auto-generated).'
-    //   });
-    // }
+      const mcqs = await generateMCQs(subtitleText);
+      res.json(mcqs);
+    } catch (subtitleError) {
+      console.error('Subtitle extraction error:', subtitleError);
+      res.status(404).json({ 
+        error: 'Failed to extract captions. Please ensure the video exists and has English subtitles enabled (either manual or auto-generated).'
+      });
+    }
     // const response = await getSubtitlesFromVideo(videoId);
-    const response = await Subtitlemain(videoId)
-    console.log('Subtitles:', response);
-    return res.json({ subtitles: response });
+    // const response = await Subtitlemain(videoId)
+    // console.log('Subtitles:', response);
+
+    // return res.json({ subtitles: response });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: 'Failed to generate MCQs. Please try again.' });
