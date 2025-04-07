@@ -17,7 +17,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
-    "youtube-caption-extractor": "^1.4.3"
+    "youtube-caption-extractor": "^1.4.3",
+    "youtube-captions-scraper": "^2.0.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

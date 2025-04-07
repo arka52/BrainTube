@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const youtubeCaptionExtractor = require('youtube-caption-extractor');
+const { getSubtitles } = require('youtube-captions-scraper');
 require('dotenv').config();
 
 const app = express();
@@ -79,7 +79,7 @@ app.post('/api/generate-mcq', async (req, res) => {
 
     try {
       // First try manual English captions
-      let subtitles = await youtubeCaptionExtractor.getSubtitles({
+      let subtitles = await getSubtitles({
         videoID: videoId,
         lang: 'en'
       });
@@ -87,10 +87,9 @@ app.post('/api/generate-mcq', async (req, res) => {
       // If no manual captions, try auto-generated ones
       if (!subtitles || subtitles.length === 0) {
         try {
-          subtitles = await youtubeCaptionExtractor.getSubtitles({
+          subtitles = await getSubtitles({
             videoID: videoId,
-            lang: 'en',
-            auto: true
+            lang: 'a.en' // Auto-generated English captions
           });
         } catch (autoError) {
           console.error('Auto-caption extraction error:', autoError);
