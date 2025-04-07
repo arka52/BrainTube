@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { getSubtitles } = require('youtube-captions-scraper');
+const getSubtitles = require('youtube-captions-scraper').getSubtitles;
 require('dotenv').config();
 
 const app = express();
@@ -15,6 +15,30 @@ function extractVideoId(url) {
   const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
   const match = url.match(regExp);
   return (match && match[7].length === 11) ? match[7] : null;
+}
+
+async function getSubtitlesFromVideo(videoId) {
+  try {
+    // Try to get English subtitles
+    const captions = await getSubtitles({
+      videoID: videoId,
+      lang: 'en'
+    });
+
+    if (!captions || captions.length === 0) {
+      throw new Error('No English captions found');
+    }
+
+    // Convert captions array to text
+    const subtitleText = captions
+      .map(caption => caption.text)
+      .join(' ');
+
+    return subtitleText;
+  } catch (error) {
+    console.error('Error fetching subtitles:', error);
+    throw error;
+  }
 }
 
 async function generateMCQs(subtitles) {
@@ -78,36 +102,15 @@ app.post('/api/generate-mcq', async (req, res) => {
     console.log('Extracted Video ID:', videoId);
 
     try {
-      // First try manual English captions
-      let subtitles = await getSubtitles({
-        videoID: videoId,
-        lang: 'en'
-      });
+      const subtitleText = await getSubtitlesFromVideo(videoId);
       
-      // If no manual captions, try auto-generated ones
-      if (!subtitles || subtitles.length === 0) {
-        try {
-          subtitles = await getSubtitles({
-            videoID: videoId,
-            lang: 'a.en' // Auto-generated English captions
-          });
-        } catch (autoError) {
-          console.error('Auto-caption extraction error:', autoError);
-        }
-      }
-
-      console.log('Subtitles:', subtitles);
-
-      if (!subtitles || subtitles.length === 0) {
+      if (!subtitleText) {
         return res.status(404).json({ 
           error: 'No English captions found. Please ensure the video has either manual or auto-generated English captions enabled.'
         });
       }
 
-      const subtitleText = subtitles.map(sub => sub.text).join(' ');
-
       const mcqs = await generateMCQs(subtitleText);
-      
       res.json(mcqs);
     } catch (subtitleError) {
       console.error('Subtitle extraction error:', subtitleError);
