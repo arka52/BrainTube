@@ -1,8 +1,17 @@
-const express = require('express');
-const cors = require('cors');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const getSubtitles = require('youtube-captions-scraper').getSubtitles;
-require('dotenv').config();
+// const express = require('express');
+import express from 'express';
+import cors from 'cors';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import  { getSubtitles } from 'youtube-captions-scraper';
+import dotenv from 'dotenv'
+import { Subtitlemain } from './scrapecaption.js';
+// const cors = require('cors');
+// const { GoogleGenerativeAI } = require('@google/generative-ai');
+// const getSubtitles = require('youtube-captions-scraper').getSubtitles;
+// const getSubtitles = getSubtitles.getSubtitles
+
+dotenv.config();
+// require('dotenv').config();
 
 const app = express();
 
@@ -86,6 +95,10 @@ Content to generate questions from: ${truncatedSubtitles}`;
   }
 }
 
+app.get('/', (req, res) => {
+  res.send('Hello, this is the MCQ generation API!');
+});
+
 app.post('/api/generate-mcq', async (req, res) => {
   try {
     const { videoUrl } = req.body;
@@ -102,7 +115,7 @@ app.post('/api/generate-mcq', async (req, res) => {
     console.log('Extracted Video ID:', videoId);
 
     try {
-      const subtitleText = await getSubtitlesFromVideo(videoId);
+      const subtitleText = await Subtitlemain(videoId);
       
       if (!subtitleText) {
         return res.status(404).json({ 
@@ -118,6 +131,11 @@ app.post('/api/generate-mcq', async (req, res) => {
         error: 'Failed to extract captions. Please ensure the video exists and has English subtitles enabled (either manual or auto-generated).'
       });
     }
+    // const response = await getSubtitlesFromVideo(videoId);
+    // const response = await Subtitlemain(videoId)
+    // console.log('Subtitles:', response);
+
+    // return res.json({ subtitles: response });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: 'Failed to generate MCQs. Please try again.' });
