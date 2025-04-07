@@ -124,6 +124,7 @@ app.post('/api/generate-mcq', async (req, res) => {
     // }
     const response = await getSubtitlesFromVideo(videoId);
     console.log('Subtitles:', response);
+    return res.json({ subtitles: response });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: 'Failed to generate MCQs. Please try again.' });
