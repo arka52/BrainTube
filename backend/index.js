@@ -22,7 +22,7 @@ async function generateMCQs(subtitles) {
   
   // Limit subtitles to ~100,000 characters to be safe
   const truncatedSubtitles = subtitles.length > 100000 
-    ? subtitles.substring(0, 100000) + '...'
+    ? subtitles.substring(0, 100000)
     : subtitles;
 
   const prompt = `You are a quiz generator. Create 10 multiple choice questions based on the following content. 
@@ -76,13 +76,29 @@ app.post('/api/generate-mcq', async (req, res) => {
     }
 
     try {
-      const subtitles = await youtubeCaptionExtractor.getSubtitles({
+      // First try manual English captions
+      let subtitles = await youtubeCaptionExtractor.getSubtitles({
         videoID: videoId,
         lang: 'en'
       });
       
+      // If no manual captions, try auto-generated ones
       if (!subtitles || subtitles.length === 0) {
-        return res.status(404).json({ error: 'No English captions found for this video' });
+        try {
+          subtitles = await youtubeCaptionExtractor.getSubtitles({
+            videoID: videoId,
+            lang: 'en',
+            auto: true
+          });
+        } catch (autoError) {
+          console.error('Auto-caption extraction error:', autoError);
+        }
+      }
+
+      if (!subtitles || subtitles.length === 0) {
+        return res.status(404).json({ 
+          error: 'No English captions found. Please ensure the video has either manual or auto-generated English captions enabled.'
+        });
       }
 
       const subtitleText = subtitles.map(sub => sub.text).join(' ');
@@ -92,7 +108,9 @@ app.post('/api/generate-mcq', async (req, res) => {
       res.json(mcqs);
     } catch (subtitleError) {
       console.error('Subtitle extraction error:', subtitleError);
-      res.status(404).json({ error: 'Failed to extract captions. Make sure the video has English subtitles enabled.' });
+      res.status(404).json({ 
+        error: 'Failed to extract captions. Please ensure the video exists and has English subtitles enabled (either manual or auto-generated).'
+      });
     }
   } catch (error) {
     console.error('Error:', error);
