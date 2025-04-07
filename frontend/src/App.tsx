@@ -28,7 +28,7 @@ function App() {
 
     try {
       const response = await axios.post<MCQResponse>(
-        "https://quiztube-backend.onrender.com/api/generate-mcq",
+        "https://044a4176-8ff1-4a81-86d7-d042818e2cb2-00-1pdvuk0iqw2vd.sisko.replit.dev/api/generate-mcq",
         {
           videoUrl,
         }
