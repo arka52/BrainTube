@@ -86,6 +86,10 @@ Content to generate questions from: ${truncatedSubtitles}`;
   }
 }
 
+app.get('/', (req, res) => {
+  res.send('Hello, this is the MCQ generation API!');
+});
+
 app.post('/api/generate-mcq', async (req, res) => {
   try {
     const { videoUrl } = req.body;
