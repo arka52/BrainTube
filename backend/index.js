@@ -75,6 +75,8 @@ app.post('/api/generate-mcq', async (req, res) => {
       return res.status(400).json({ error: 'Invalid YouTube URL' });
     }
 
+    console.log('Extracted Video ID:', videoId);
+
     try {
       // First try manual English captions
       let subtitles = await youtubeCaptionExtractor.getSubtitles({
@@ -94,6 +96,8 @@ app.post('/api/generate-mcq', async (req, res) => {
           console.error('Auto-caption extraction error:', autoError);
         }
       }
+
+      console.log('Subtitles:', subtitles);
 
       if (!subtitles || subtitles.length === 0) {
         return res.status(404).json({ 
