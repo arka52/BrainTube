@@ -39,6 +39,7 @@ const Workspace = () => {
   return (
     <div className="workspace-container">
       <div className="video-section">
+        <h2>YouTube Video</h2>
         <div className="video-wrapper">
           <YouTube
             videoId={videoId}
